@@ -6,14 +6,26 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getUsers } from './js/user/Users.js';
-
+import api from './js/api.js';
+import { create } from 'zustand';
+/* zustand state */
+const useNameStore = create((set) => ({
+    firstName: "",
+    lastName: "",
+    errors: {},
+    setErrors: (errors) => set(() => ({ errors: errors })),
+    setFirstName: (firstName) => set(() => ({ firstName: firstName })),
+    setLastName: (lastName) => set(() => ({ lastName: lastName })),
+    counter: 0,
+    setCounter: () => set(state => ({ counter: state.counter + 1 }))
+}))
 export default function Users() {
-    // create states
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [errors, setErrors] = useState({});
+    /* react state */
+    // const [firstName, setFirstName] = useState("");
+    // const [lastName, setLastName] = useState("");
+    // const [errors, setErrors] = useState({});
+
     const queryClient = useQueryClient();
-    // Get User Functions
     // use query
     const { isError, isLoading, data, error } = useQuery({
         queryKey: ['users'], queryFn: getUsers, staleTime: 120000
@@ -38,11 +50,11 @@ export default function Users() {
                 first_name: firstName,
                 last_name: lastName
             }
-            // call axios api call post
             const res = await api.post("/users", cred);
+            // call axios api call post
             if (res.status == 201) {
-                setFirstName("")
-                setLastName("")
+                setFirstName("");
+                setLastName("");
             }
             console.log(res);
         }
@@ -55,10 +67,11 @@ export default function Users() {
             queryClient.invalidateQueries({ queryKey: ['users'] });
         }
     })
-
+    const { firstName, lastName, setFirstName, setLastName, counter, setCounter, errors, setErrors } = useNameStore();
     return (
         <>
             {/* Form */}
+            <button type="button" onClick={setCounter}>{counter} Counter</button>
             <form onSubmit={mutation.mutate}>
                 <label>First Name:
                     <input
@@ -66,7 +79,7 @@ export default function Users() {
                         name='first_name'
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        style={errors.first_name ? { border: "solid red 1px" } : {border:"solid black 1px"}}
+                        style={errors.first_name ? { border: "solid red 1px" } : { border: "solid black 1px" }}
 
                     />
                 </label>
@@ -77,7 +90,7 @@ export default function Users() {
                         name='first_name'
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        style={errors.last_name ? { border: "solid red 1px" } : {border:"solid black 1px"}}
+                        style={errors.last_name ? { border: "solid red 1px" } : { border: "solid black 1px" }}
                     />
                 </label>
                 <p style={{ color: "red" }}>{errors.last_name}</p>
